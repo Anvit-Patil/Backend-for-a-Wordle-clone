@@ -135,3 +135,15 @@ async def get_game_by_id(game_id, username, db, app):
     if game:
         return dict(game)
     return {}
+
+
+# Add client URL to database
+async def add_client_url(url, username, db):
+    clienturl = await db.execute(
+        """
+        INSERT INTO clientURL(url, username) 
+        VALUES(:url, :username)
+        """, 
+        values={"url": url, "username": username})
+
+    return clienturl

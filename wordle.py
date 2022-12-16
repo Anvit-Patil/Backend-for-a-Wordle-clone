@@ -13,6 +13,8 @@ from quart_schema import QuartSchema, RequestSchemaValidationError, validate_req
 from utils.queries import *
 from utils.functions import check_pos_valid_letter
 import uuid
+import socket
+import os
 
 app = Quart(__name__)
 QuartSchema(app)
@@ -312,3 +314,19 @@ async def post_user_guessword(data):
         "letterPosData": letter_map
     }
     return responseData, 201    # Return Response
+
+
+# Register Client URLs
+# Param: 
+@app.route("/game/register", methods=["POST"])
+@validate_request(Username)
+async def register_client(data):
+    """Register client with wordle service and returns a callback URL"""
+    db = await _get_db(0)
+    username = dataclasses.asdict(data)
+    clientURL = f"http://{socket.getfqdn()}:{os.environ['PORT']}"
+    app.logger.info(clientURL)
+
+    await add_client_url(clientURL, username, db)
+
+    return {"url": clientURL, "username": username}

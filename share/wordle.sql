@@ -21,6 +21,7 @@ ON game (username, num_of_guesses);
 CREATE INDEX game_idx_2
 ON game (username, id);
 
+DROP TABLE IF EXISTS clientURL;
 DROP TABLE IF EXISTS userInput;
 CREATE TABLE userInput(
     id INTEGER primary key,
@@ -32,3 +33,8 @@ CREATE TABLE userInput(
 CREATE INDEX userInput_idx_1
 ON userInput (username, game_id);
 COMMIT;
+
+CREATE TABLE clientURL(
+    url VARCHAR primary key,
+    username VARCHAR references userInput(username) 
+);
