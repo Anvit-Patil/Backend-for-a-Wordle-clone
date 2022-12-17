@@ -1,2 +1,10 @@
+__pycache__
+var/primary/data
+var/primary/mount
+var/secondary1/data
+var/secondary1/mount
+var/secondary2/data
+var/secondary2/mount
+utils/__pycache__
 wordle.db
 user.db

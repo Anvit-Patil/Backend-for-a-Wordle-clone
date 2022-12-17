@@ -7,6 +7,7 @@
 #   Purpose: Perform SQL queries
 
 from random import randint
+import sqlite3
 
 
 # Add a new game for a user
@@ -138,12 +139,15 @@ async def get_game_by_id(game_id, username, db, app):
 
 
 # Add client URL to database
-async def add_client_url(url, username, db):
-    clienturl = await db.execute(
-        """
-        INSERT INTO clientURL(url, username) 
-        VALUES(:url, :username)
-        """, 
-        values={"url": url, "username": username})
-
-    return clienturl
+async def add_client_url(url, service, db):
+    try:
+        clienturl = await db.execute(
+            """
+            INSERT INTO clientURL(url, service) 
+            VALUES(:url, :service)
+            """, 
+            values={"url": url, "service": service})
+        print(clienturl)
+        return clienturl
+    except sqlite3.IntegrityError as e:
+            print("error adding URl, please try again", e)

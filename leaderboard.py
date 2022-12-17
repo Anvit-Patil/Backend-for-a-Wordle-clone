@@ -1,12 +1,20 @@
 import dataclasses
 import textwrap
 import redis
+import socket
+import os
+import httpx
 from quart import Quart, g, abort, request
 from quart_schema import QuartSchema, RequestSchemaValidationError, validate_request
 
 
 app = Quart(__name__)
 QuartSchema(app)
+
+r = redis.StrictRedis(host='localhost',port=6379,db=0)
+host_name = socket.gethostbyname(socket.getfqdn("localhost"))
+port = os.environ.get('PORT')
+
 
 @dataclasses.dataclass
 class GameData: 
@@ -64,6 +72,27 @@ def leaderboard():
     return textwrap.dedent( """<h1>Welcome to Leaderboard service</h1>
                 <p>Vu Diep</p>
     """)
+
+
+
+
+
+# Registering call back url with game_service
+def register_URLs():
+
+    print("REgistering URL")
+    #Creating Callback Url
+    clientURL = f"http://{host_name}:{port}/leaderboard/add"
+
+    app.logger.info(clientURL)
+    data = {'url' : clientURL, 'service' : 'update_service'}
+
+    #Hitting Post Request
+
+    response = httpx.post(f"http://{host_name}:5100/game/register", json = data)
+    
+    if (response.status_code == '200'):
+        print(response.text)
 
 
 @app.route("/leaderboard/add", methods=["POST"])
@@ -129,3 +158,9 @@ async def get_user():
         
     print(top_players)
     return top_players
+
+
+try:
+    register_URLs()
+except httpx.HTTPError as exc:
+    print(f"HTTP Exception for {exc.request.url} - {exc}")
