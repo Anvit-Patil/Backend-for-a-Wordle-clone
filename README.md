@@ -91,12 +91,10 @@ server {
 After changing the tutorial file in nginx. Restart the server bhy follwing command:
 ```
 $ sudo service nginx restart
-
 ```
 
-```
 
-### Retrying Failed Jobs
+#### Retrying Failed Jobs
 Cron Jobs help us to schedule any job in ubuntu as per our requiremnets. Here, we are setting that for every 10 minutes whichever job that are queued in rq queue, has been failed due to some issue in leaderboard service can be pushed again to leaderboard service so that the failed jobs can be retried again.
 <br/>
 Run this command in terminal
