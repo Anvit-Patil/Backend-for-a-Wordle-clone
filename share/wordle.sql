@@ -30,11 +30,14 @@ CREATE TABLE userInput(
     guess_word VARCHAR
 );
 
-CREATE INDEX userInput_idx_1
-ON userInput (username, game_id);
-COMMIT;
+
 
 CREATE TABLE clientURL(
-    url VARCHAR primary key,
-    username VARCHAR references userInput(username) 
+    id INTEGER primary key,
+    service VARCHAR,
+    url VARCHAR
 );
+
+CREATE INDEX client_idx_1
+ON clientURL (url, id);
+COMMIT;

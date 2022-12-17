@@ -8,13 +8,21 @@ import sqlite3
 import textwrap
 import databases
 import toml
-from quart import Quart, g, abort
+from quart import Quart, jsonify, g, request, abort
 from quart_schema import QuartSchema, RequestSchemaValidationError, validate_request
 from utils.queries import *
 from utils.functions import check_pos_valid_letter
 import uuid
 import socket
+from utils.functions import post_request_to_leaderboard
 import os
+import requests
+
+from rq import Queue
+from redis import Redis
+from rq.job import Job
+from rq.registry import FailedJobRegistry
+# from request import post_to_leaderboard
 
 app = Quart(__name__)
 QuartSchema(app)
@@ -254,12 +262,17 @@ async def post_user_guessword(data):
     num_of_guesses = await get_game_num_guesses(id=game_id, username=username, db=db, app=app)
     won = await get_win_query(id=game_id, username=username, db=db, app=app) 
 
+    clienturl = await db.fetch_one(query="SELECT url from clientURL")
+    clienturl = clienturl
+    data = {"game_id":game_id,"username":username,"num_of_guesses":num_of_guesses[0],"win":won[0]}  
+
     # User and game doesn't exist
     if not num_of_guesses or not won: 
         return abort(404)
 
     # Game already won or lost
-    if num_of_guesses[0] >= 6 or won[0]:   
+    if num_of_guesses[0] >= 6 or won[0]: 
+        job_worker(data,clienturl)
         return {"numberOfGuesses": num_of_guesses[0], "win": won[0]}
 
     # Check if user already guess the word before
@@ -313,20 +326,37 @@ async def post_user_guessword(data):
         "correctWord": isCorrectWord,
         "letterPosData": letter_map
     }
+    job_worker(data,clienturl)
     return responseData, 201    # Return Response
 
 
 # Register Client URLs
 # Param: 
 @app.route("/game/register", methods=["POST"])
-@validate_request(Username)
-async def register_client(data):
+async def register_client():
+    data = await request.get_json()
     """Register client with wordle service and returns a callback URL"""
-    db = await _get_db(0)
-    username = dataclasses.asdict(data)
-    clientURL = f"http://{socket.getfqdn()}:{os.environ['PORT']}"
+    clientURL = data['url']
+    service = data['service']
     app.logger.info(clientURL)
 
-    await add_client_url(clientURL, username, db)
+    db= await _get_db(0)
 
-    return {"url": clientURL, "username": username}
+    #if the url already exists in db
+    url = await db.fetch_one(query="SELECT url from clientURL WHERE url=:url", values={"url":clientURL})
+
+    if( not url):
+        await add_client_url(clientURL, service, db)
+        return {"url": clientURL, "service": service, "message" : "Callback Url registered successfully", "status" : 200}
+    else:
+        return "Client URL already exist", 403  
+
+
+def job_worker(data, url):
+    redis_conn = Redis()
+    q = Queue(connection=redis_conn) 
+    registry = FailedJobRegistry(queue=q)
+    job = q.enqueue(post_request_to_leaderboard, data, url)
+    for job_id in registry.get_job_ids():
+        queue_jobs = Job.fetch(job_id, connection=redis_conn)
+        print("Job id : " + job_id)
