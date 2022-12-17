@@ -76,7 +76,6 @@ def leaderboard():
 
 
 
-
 # Registering call back url with game_service
 def register_URLs():
 

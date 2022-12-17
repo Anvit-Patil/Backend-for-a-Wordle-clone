@@ -1,18 +1,8 @@
-# CPSC 449 - Project 4
+# CPSC 449 Group 18 Project 4
+<p><b>Group Member:</b> Ashley Thorlin, Anvit Patil, Ayush Bhardwaj, Parva Parikh</p>
 
-Follow the steps to run process
-
-### Authors
-Group 18
-Members:
-- Ayush Bhardwaj (885866178)
-- Ashley Thorlin ()
-- Anvit Rajesh Patil ()
-- Parva Parikh ()
-
-
-## Setup Dependencies
-
+## Setup
+### Requirements
 - Python 3 (with pip)
 - Quart
 - SQLite 3
@@ -23,25 +13,37 @@ Members:
 - HTTPie
 - PyTest (including pytest-asyncio)
 - Redis
-- RQ
-- HTTPX
+- Run-one
 
-Run the following commands to install all dependencies:
-```
-$ sudo apt update
-$ sudo snap install httpie
-$ sudo apt install --yes python3-pip ruby-foreman sqlite3
-$ python3 -m pip install --upgrade quart[dotenv] click markupsafe Jinja2
-$ python3 -m pip install sqlalchemy==1.4.41
-$ python3 -m pip install databases[aiosqlite]
-$ python3 -m pip install pytest pytest-asyncio
-$ sudo apt install nginx
-$ sudo apt install --yes nginx-extras
-$ sudo apt install --yes python3-hiredis
-$ python3 -m pip install rq
-$ python3 -m pip install httpx
+## Installations
+<p>1. cd into the root directory</p>
 
+```sh
+cd cpsc449-wordle-backend/
 ```
+<p>2. Install libraries needed</p>
+
+```sh
+./bin/requirements.sh
+```
+<p>3. Setting up the database</p>
+
+```sh
+./bin/init.sh
+```
+<p>4. Start the server with foreman</p>
+
+```sh
+foreman start
+```
+
+<p>5. Start redis server</p>
+
+```sh
+./redis.sh
+```
+<br/>
+
 ### Configuring Nginx File
 #### Path (/etc/ngnix/sites-enabled/tutorial)
 
@@ -89,29 +91,32 @@ server {
 After changing the tutorial file in nginx. Restart the server bhy follwing command:
 ```
 $ sudo service nginx restart
-
 ```
 
 
-### Configuring CronJob File
-
-
-
-
-### Launching the App
-Start the foreman to launch the App
+#### Retrying Failed Jobs
+Cron Jobs help us to schedule any job in ubuntu as per our requiremnets. Here, we are setting that for every 10 minutes whichever job that are queued in rq queue, has been failed due to some issue in leaderboard service can be pushed again to leaderboard service so that the failed jobs can be retried again.
+<br/>
+Run this command in terminal
+<br/>
+```
+crontab -e
+```
+<br/>
+This will open editor where we can configure our crontab.
+<br/>
+Then paste this command
+<br/>
 
 ```
-$ foreman start
-
+*/10 * * * * run-one rq requeue --all --queue default
 ```
+<br/>
+Here run-one helps us to run just one instance of a command and its args at a time
 
-### Initializing the Database
-to create database, Run the following command
-```
-$ ./bin/init.sh
+<br/>
+<br/>
 
-```
 
 ### User Authentication Routes
 #### Registering a new user
@@ -186,3 +191,18 @@ Adds to the Leaderboard if game is won and calculates the score based on the num
 http GET http://127.0.0.1:5400/leaders
 
 ```
+
+
+
+> ⚠ The development server for User service will be started at http://127.0.0.1:5000/ <br/>
+> ⚠ The 3 development servers for Game service will be started at <br/>
+http://127.0.0.1:5100/  <br/>
+http://127.0.0.1:5200/  <br/>
+http://127.0.0.1:5300/  <br/>
+> ⚠ Leaderboard service will be started at http://127.0.0.1:5400/ <br/>
+
+To access leaderboard data through nginx, visit http://tuffix-vm/leaders
+
+## Documentation
+
+<p>After starting the server with foreman start, go to http://127.0.0.1:5000/docs, http://127.0.0.1:5100/docs, and http://127.0.0.1:5400/docs for all REST API routes example</p>
