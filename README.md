@@ -107,6 +107,7 @@ This will open editor where we can configure our crontab.
 <br/>
 Then paste this command
 <br/>
+
 ```
 */10 * * * * run-one rq requeue --all --queue default
 ```
@@ -115,6 +116,82 @@ Here run-one helps us to run just one instance of a command and its args at a ti
 
 <br/>
 <br/>
+
+
+### User Authentication Routes
+#### Registering a new user
+```
+http POST http://localhost:5000/user/register username=<new username> password=<new password>
+```
+
+To Login Hit the following endpoint with username and password.
+#### Logging In
+```
+http POST http://localhost:5000/user/login --auth <username>:<password>
+
+```
+It will return `{"authenticated": True}` if properly authenticated.
+
+
+### Game Endpoints
+#### Start a game
+```
+http --auth <username>:<password> POST http://localhost:5001/game/user/start username=<username>
+
+```
+This will only create a new game for the user. It will return the game ID, if successful.
+
+#### List all active games
+```
+http --auth <username>:<password> GET http://localhost:5001/game/{username}/{game_id}
+```
+This lists all the game IDs of the active games of the user. Note that this only lists **active** games -- unfinished games that are below the 6 guess limit.
+
+#### Guess a word
+```
+http --auth <username>:<password> POST http://localhost:5001/game/guess/ game_id=<game_id> guess_word=<guess_word> username=<username>
+```
+This Api checks whether the guess is correct or not.
+
+
+Return JSON is in the form of:
+```
+{
+  "guessesRemain": <Remaining_guess>,
+  "isValid": <word_valid_or_not>,
+  "correctWord": <correct_or_not>,
+  "letterPosData": {
+    "correctPosition": <list of position of correct letter>,
+    "correctLetterWrongPos": <list of position of wrong letter>,
+    "wrongLetter": <list of position of wrong letter>
+  }
+}
+```
+
+
+
+
+#### Register Client URLs
+```
+http://127.0.0.1:5400/game_register_urls [POST]
+```
+Allowing clients to register the URLs. Client URLs are stored in the database. 
+
+
+## Redis Leaderboard Route
+#### Populate Leaderboard with data
+```
+http://127.0.0.1:5400/leaderboard/add [POST]
+
+```
+Adds to the Leaderboard if game is won and calculates the score based on the number of guesses.
+
+#### Top10 users
+```
+http GET http://127.0.0.1:5400/leaders
+
+```
+
 
 
 > ⚠ The development server for User service will be started at http://127.0.0.1:5000/ <br/>
